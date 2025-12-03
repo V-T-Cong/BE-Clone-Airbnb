@@ -2,7 +2,6 @@ package com.congvo.be_myapp.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,14 +23,37 @@ public class JwtUtil {
     @Value("${security.jwt.expiration-time}")
     private long jwtExpiration;
 
-    public String extractEmailFromToken(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
     // 1. Get the signing key
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
         return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    // --- Public Methods ---
+    /**
+     * Generates a JWT for the given email.
+     * @param email The subject of the token (the user).
+     * @return The signed JWT string.
+     */
+    public String generateToken(String id, String email, String username) {
+        // 1. Prepare Claims and Dates
+        Map<String, Object> claims = new HashMap<>();
+
+        claims.put("id", id);
+        claims.put("email", email);
+
+        final long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiration = new Date(now + jwtExpiration);
+
+        // 2. Build the Token using the modern API
+        return Jwts.builder()
+                .claims(claims)
+                .subject(username)
+                .issuedAt(issuedAt)
+                .expiration(expiration)
+                .signWith(getSigningKey())
+                .compact();
     }
 
     // 2. Extract a single claim (e.g., username)
@@ -49,41 +71,15 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    // --- Public Methods ---
-
-    /**
-     * Generates a JWT for the given username.
-     * @param username The subject of the token (the user).
-     * @return The signed JWT string.
-     */
-    public String generateToken(String username) {
-        // 1. Prepare Claims and Dates
-        Map<String, Object> claims = new HashMap<>();
-        // The Claims map can be populated with custom data/roles
-
-        final long now = System.currentTimeMillis();
-        Date issuedAt = new Date(now);
-        Date expiration = new Date(now + jwtExpiration);
-
-        // 2. Build the Token using the modern API
-        return Jwts.builder()
-                .claims(claims)
-                .subject(username)
-                .issuedAt(issuedAt)
-                .expiration(expiration)
-                .signWith(getSigningKey())
-                .compact();
-    }
-
     /**
      * Validates if the token is valid (not expired and signature is correct).
      * @param token The JWT string.
-     * @param username The expected username (from DB or security context).
+     * @param email The expected username (from DB or security context).
      * @return true if valid, false otherwise.
      */
-    public boolean validateToken(String token, String username) {
-        final String tokenUsername = extractClaim(token, Claims::getSubject);
-        return (tokenUsername.equals(username) && !isTokenExpired(token));
+    public boolean validateToken(String token, String email) {
+        final String emailInToken = extractClaim(token, claims -> claims.get("email", String.class));
+        return (email.equals(emailInToken) && !isTokenExpired(token));
     }
 
     /**
@@ -98,6 +94,10 @@ public class JwtUtil {
      */
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractEmail(String token) {
+        return extractClaim(token, claims -> claims.get("email", String.class));
     }
 
 }

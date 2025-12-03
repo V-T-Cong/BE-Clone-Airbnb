@@ -1,6 +1,8 @@
 package com.congvo.be_myapp.controller;
 
+import com.congvo.be_myapp.dto.request.LoginRequest;
 import com.congvo.be_myapp.dto.request.SignUpRequest;
+import com.congvo.be_myapp.dto.response.LoginResponse;
 import com.congvo.be_myapp.service.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +30,14 @@ public class AuthController {
         }
     }
 
-
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        try {
+            String token = authService.login(loginRequest);
+            return ResponseEntity.ok(new LoginResponse(token, loginRequest.getEmail()));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid email or password");
+        }
+    }
 
 }

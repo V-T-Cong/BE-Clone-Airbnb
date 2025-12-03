@@ -1,20 +1,31 @@
 package com.congvo.be_myapp.service;
 
+import com.congvo.be_myapp.dto.request.LoginRequest;
 import com.congvo.be_myapp.dto.request.SignUpRequest;
 import com.congvo.be_myapp.entity.User;
 import com.congvo.be_myapp.repository.UserRepository;
+import com.congvo.be_myapp.util.JwtUtil;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AuthService {
 
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public AuthService(JwtUtil jwtUtil, UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+        this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.authenticationManager = authenticationManager;
     }
 
     public String register(SignUpRequest signUpRequest) {
@@ -35,6 +46,20 @@ public class AuthService {
         userRepository.save(user);
 
         return "User registered successfully!";
+    }
+
+    public String login(LoginRequest loginRequest) {
+        // 1. Xác thực bằng AuthenticationManager
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        User user = userRepository.findByEmail(loginRequest.getEmail());
+
+        return jwtUtil.generateToken(String.valueOf(user.getId()), loginRequest.getEmail(), user.getUsername());
     }
 
 }
