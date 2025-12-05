@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -27,5 +28,9 @@ public class UserService implements UserDetailsService {
                 user.getPassword(),
                 new ArrayList<>() // add Role later.
         );
+    }
+
+    public UUID getUserID(String email) {
+        return userRepository.findByEmail(email).getId();
     }
 }

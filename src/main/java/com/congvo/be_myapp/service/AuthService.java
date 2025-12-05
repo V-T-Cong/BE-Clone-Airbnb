@@ -60,4 +60,9 @@ public class AuthService {
         return jwtUtil.generateToken(String.valueOf(user.getId()), loginRequest.getEmail(), user.getUsername());
     }
 
+    public String generateTokenOnly(String email) {
+        User user = userRepository.findByEmail(email);
+        return jwtUtil.generateToken(String.valueOf(user.getId()), email, user.getUsername());
+    }
+
 }
