@@ -32,27 +32,19 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<String> registerUser(@RequestBody SignUpRequest signUpRequest) {
-        try {
-            String response = authService.register(signUpRequest);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        String response = authService.register(signUpRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-        try {
-            String accessToken = authService.login(loginRequest);
-            UUID uuid = userService.getUserID(loginRequest.getEmail());
-            String refreshToken = refreshTokenService.getRefreshToken(uuid);
-            return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, loginRequest.getEmail()));
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid email or password");
-        }
+        String accessToken = authService.login(loginRequest);
+        UUID uuid = userService.getUserID(loginRequest.getEmail());
+        String refreshToken = refreshTokenService.getRefreshToken(uuid);
+        return ResponseEntity.ok(new LoginResponse(accessToken, refreshToken, loginRequest.getEmail()));
     }
 
-    @RequestMapping("/refresh-token")
+    @PostMapping("/refresh-token")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();
 

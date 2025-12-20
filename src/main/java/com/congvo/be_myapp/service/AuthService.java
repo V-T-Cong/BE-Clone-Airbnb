@@ -5,6 +5,7 @@ import com.congvo.be_myapp.dto.request.SignUpRequest;
 import com.congvo.be_myapp.entity.User;
 import com.congvo.be_myapp.repository.UserRepository;
 import com.congvo.be_myapp.util.JwtUtil;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,7 +20,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
 
-    public AuthService(JwtUtil jwtUtil, UserRepository userRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
+    public AuthService(JwtUtil jwtUtil, UserRepository userRepository, PasswordEncoder passwordEncoder, @Lazy AuthenticationManager authenticationManager) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;

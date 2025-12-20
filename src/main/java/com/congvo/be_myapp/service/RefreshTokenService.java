@@ -28,20 +28,11 @@ public class RefreshTokenService {
     public String getRefreshToken(UUID userId) {
         User user = userRepository.findById(userId);
 
-        // SỬA ĐỔI: Kiểm tra xem user đã có refresh token chưa
-        RefreshToken refreshToken = refreshTokenRepository.findByUser(user)
-                .orElseGet(() -> {
-                    RefreshToken newToken = new RefreshToken();
-                    newToken.setUser(user);
-                    return newToken;
-                });
-
-        // Cập nhật lại token mới và hạn sử dụng
-        String token = UUID.randomUUID().toString();
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setUser(user);
         refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        refreshToken.setToken(token);
+        refreshToken.setToken(UUID.randomUUID().toString());
 
-        // JPA sẽ tự động Update nếu object đã có ID, hoặc Insert nếu chưa có ID
         refreshToken = refreshTokenRepository.save(refreshToken);
 
         return refreshToken.getToken();

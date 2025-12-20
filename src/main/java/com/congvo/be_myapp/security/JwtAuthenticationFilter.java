@@ -39,7 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
         try {
-            userEmail = jwtUtil.extractEmail(jwt); // Trong JwtUtil của bạn, extractUsername chính là lấy subject (email)
+            userEmail = jwtUtil.extractEmail(jwt);
 
             // 3. Nếu có email và chưa xác thực
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {

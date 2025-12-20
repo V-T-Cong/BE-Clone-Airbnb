@@ -29,12 +29,6 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    // --- Public Methods ---
-    /**
-     * Generates a JWT for the given email.
-     * @param email The subject of the token (the user).
-     * @return The signed JWT string.
-     */
     public String generateToken(String id, String email, String username) {
         // 1. Prepare Claims and Dates
         Map<String, Object> claims = new HashMap<>();
@@ -71,29 +65,13 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    /**
-     * Validates if the token is valid (not expired and signature is correct).
-     * @param token The JWT string.
-     * @param email The expected username (from DB or security context).
-     * @return true if valid, false otherwise.
-     */
     public boolean validateToken(String token, String email) {
         final String emailInToken = extractClaim(token, claims -> claims.get("email", String.class));
         return (email.equals(emailInToken) && !isTokenExpired(token));
     }
 
-    /**
-     * Checks if the token's expiration date is in the past.
-     */
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
-    }
-
-    /**
-     * Extracts the username (subject) from a token.
-     */
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
     }
 
     public String extractEmail(String token) {
