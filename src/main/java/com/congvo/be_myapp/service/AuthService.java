@@ -2,7 +2,9 @@ package com.congvo.be_myapp.service;
 
 import com.congvo.be_myapp.dto.request.LoginRequest;
 import com.congvo.be_myapp.dto.request.SignUpRequest;
+import com.congvo.be_myapp.entity.Role;
 import com.congvo.be_myapp.entity.User;
+import com.congvo.be_myapp.repository.RoleRepository;
 import com.congvo.be_myapp.repository.UserRepository;
 import com.congvo.be_myapp.util.JwtUtil;
 import org.springframework.context.annotation.Lazy;
@@ -11,6 +13,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.HashSet;
+
 @Service
 public class AuthService {
 
@@ -18,13 +23,20 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final RoleRepository roleRepository;
 
 
-    public AuthService(JwtUtil jwtUtil, UserRepository userRepository, PasswordEncoder passwordEncoder, @Lazy AuthenticationManager authenticationManager) {
+    public AuthService(JwtUtil jwtUtil,
+                       UserRepository userRepository,
+                       PasswordEncoder passwordEncoder,
+                       @Lazy AuthenticationManager authenticationManager,
+                       RoleRepository roleRepository
+    ) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.roleRepository = roleRepository;
     }
 
     public String register(SignUpRequest signUpRequest) {
@@ -37,10 +49,14 @@ public class AuthService {
         }
 
         User user = new User();
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Error: Role is not found."));
+
         user.setUsername(signUpRequest.getUsername());
         user.setPhoneNumber(String.valueOf(signUpRequest.getPhoneNumber()));
         user.setEmail(signUpRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
 
         userRepository.save(user);
 
