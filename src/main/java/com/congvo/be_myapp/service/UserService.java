@@ -1,16 +1,19 @@
 package com.congvo.be_myapp.service;
 
+import com.congvo.be_myapp.dto.request.ChangePasswordRequest;
 import com.congvo.be_myapp.dto.response.UserResponse;
+import com.congvo.be_myapp.entity.Role;
 import com.congvo.be_myapp.entity.User;
 import com.congvo.be_myapp.repository.UserRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -20,9 +23,11 @@ import java.util.stream.Collectors;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, @Lazy PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -64,7 +69,7 @@ public class UserService implements UserDetailsService {
         }
 
         Set<String> roles = user.getRoles().stream()
-                .map(role -> role.getName())
+                .map(Role::getName)
                 .collect(Collectors.toSet());
 
         return new UserResponse(
@@ -74,6 +79,25 @@ public class UserService implements UserDetailsService {
                 user.getPhoneNumber(),
                 roles
         );
+    }
+
+    public void changePassword(String email, ChangePasswordRequest changePassword) {
+        User user =  userRepository.findByEmail(email);
+
+        if (user == null) {
+            throw new RuntimeException("User not found");
+        }
+
+        if (passwordEncoder.matches(changePassword.getNewPassword(), user.getPassword())) {
+            throw new RuntimeException("Wrong current password!");
+        }
+
+        if (!changePassword.getNewPassword().equals(changePassword.getConfirmationPassword())) {
+            throw new RuntimeException("New passwords do not match!");
+        }
+
+        user.setPassword(passwordEncoder.encode(changePassword.getNewPassword()));
+        userRepository.save(user);
     }
 
 }

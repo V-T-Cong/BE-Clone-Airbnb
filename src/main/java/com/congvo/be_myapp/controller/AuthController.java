@@ -37,7 +37,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<LoginResponse> loginUser(@RequestBody LoginRequest loginRequest) {
         String accessToken = authService.login(loginRequest);
         UUID uuid = userService.getUserID(loginRequest.getEmail());
         String refreshToken = refreshTokenService.getRefreshToken(uuid);

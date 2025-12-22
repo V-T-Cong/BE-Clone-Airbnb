@@ -3,11 +3,13 @@ package com.congvo.be_myapp.dto.response;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Set;
 import java.util.UUID;
 
 @Data
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserResponse {
