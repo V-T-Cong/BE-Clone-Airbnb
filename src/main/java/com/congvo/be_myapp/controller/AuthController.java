@@ -1,8 +1,6 @@
 package com.congvo.be_myapp.controller;
 
-import com.congvo.be_myapp.dto.request.LoginRequest;
-import com.congvo.be_myapp.dto.request.RefreshTokenRequest;
-import com.congvo.be_myapp.dto.request.SignUpRequest;
+import com.congvo.be_myapp.dto.request.*;
 import com.congvo.be_myapp.dto.response.LoginResponse;
 import com.congvo.be_myapp.entity.RefreshToken;
 import com.congvo.be_myapp.service.AuthService;
@@ -57,6 +55,18 @@ public class AuthController {
                     return ResponseEntity.ok(new LoginResponse(newAccessToken, newRefreshToken, user.getEmail()));
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token is not in database!"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgetPassword request) {
+        String response = authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        String response = authService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok(response);
     }
 
 }

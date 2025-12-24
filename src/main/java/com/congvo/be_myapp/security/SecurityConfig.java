@@ -54,7 +54,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html"
+                                "/swagger-ui.html",
+                                "/test-email",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
                         ).permitAll()
                         // Allow Auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()

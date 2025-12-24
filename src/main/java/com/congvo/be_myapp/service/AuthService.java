@@ -2,8 +2,10 @@ package com.congvo.be_myapp.service;
 
 import com.congvo.be_myapp.dto.request.LoginRequest;
 import com.congvo.be_myapp.dto.request.SignUpRequest;
+import com.congvo.be_myapp.entity.PasswordResetToken;
 import com.congvo.be_myapp.entity.Role;
 import com.congvo.be_myapp.entity.User;
+import com.congvo.be_myapp.repository.PasswordResetTokenRepository;
 import com.congvo.be_myapp.repository.RoleRepository;
 import com.congvo.be_myapp.repository.UserRepository;
 import com.congvo.be_myapp.util.JwtUtil;
@@ -13,8 +15,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -24,19 +28,24 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final RoleRepository roleRepository;
-
+    private final EmailService emailService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
     public AuthService(JwtUtil jwtUtil,
                        UserRepository userRepository,
                        PasswordEncoder passwordEncoder,
                        @Lazy AuthenticationManager authenticationManager,
-                       RoleRepository roleRepository
+                       RoleRepository roleRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
+                       EmailService emailService
     ) {
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.roleRepository = roleRepository;
+        this.emailService = emailService;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
     }
 
     public String register(SignUpRequest signUpRequest) {
@@ -64,7 +73,6 @@ public class AuthService {
     }
 
     public String login(LoginRequest loginRequest) {
-        // 1. Xác thực bằng AuthenticationManager
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
@@ -80,6 +88,43 @@ public class AuthService {
     public String generateTokenOnly(String email) {
         User user = userRepository.findByEmail(email);
         return jwtUtil.generateToken(String.valueOf(user.getId()), email, user.getUsername());
+    }
+
+    public String forgotPassword(String email) {
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return "If your email exists, a reset link has been sent.";
+        }
+
+        passwordResetTokenRepository.deleteByUser(user);
+        String token = UUID.randomUUID().toString();
+        PasswordResetToken resetToken = new PasswordResetToken();
+        resetToken.setUser(user);
+        resetToken.setToken(token);
+        resetToken.setExpiryDate(LocalDateTime.now().plusMinutes(15));
+        passwordResetTokenRepository.save(resetToken);
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
+        return "If your email exists, a reset link has been sent.";
+    }
+
+    public String resetPassword(String token, String newPassword) {
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        if (resetToken.isExpired()) {
+            passwordResetTokenRepository.delete(resetToken);
+            throw new RuntimeException("Token has expired");
+        }
+
+        User user = resetToken.getUser();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        // Consume the token so it can't be used again
+        passwordResetTokenRepository.delete(resetToken);
+
+        return "Password successfully reset";
     }
 
 }
