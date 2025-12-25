@@ -17,7 +17,10 @@ public class DataSeeder implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
 
-    public DataSeeder(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+    public DataSeeder(
+            RoleRepository roleRepository,
+            PermissionRepository permissionRepository
+    ) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
     }

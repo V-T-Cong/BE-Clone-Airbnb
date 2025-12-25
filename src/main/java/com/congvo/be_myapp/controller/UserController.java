@@ -12,25 +12,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/users")
 public class UserController {
 
-    private UserService userService;
+    private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
-
-//    // Accessible by anyone with a valid token (ROLE_USER or ROLE_ADMIN)
-//    @GetMapping("/me")
-//    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-//    public String userAccess() {
-//        return "User Content.";
-//    }
-//
-//    // Accessible only by ADMIN
-//    @GetMapping("/admin")
-//    @PreAuthorize("hasRole('ADMIN')")
-//    public String adminAccess() {
-//        return "Admin Board.";
-//    }
 
     @GetMapping("/my-info")
     public ResponseEntity<UserResponse> getUserInfo() {
@@ -43,7 +29,6 @@ public class UserController {
 
         return ResponseEntity.ok(userResponse);
     }
-
 
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(ChangePasswordRequest changePasswordRequest) {
